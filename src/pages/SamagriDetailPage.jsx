@@ -111,7 +111,7 @@ function ImageGallery({ images, name }) {
   const [zoomed, setZoomed] = useState(false);
 
   return (
-    <div className="sticky top-24">
+    <div className="lg:sticky lg:top-24">
       <div className="relative mb-3 aspect-square overflow-hidden rounded-3xl bg-cream cursor-zoom-in border border-dark-50"
         onClick={() => setZoomed(true)}>
         <AnimatePresence mode="wait">
@@ -133,7 +133,7 @@ function ImageGallery({ images, name }) {
       <div className="flex gap-2 overflow-x-auto pb-1">
         {images.map((img, i) => (
           <button key={i} type="button" onClick={() => setActive(i)}
-            className={`shrink-0 h-16 w-16 rounded-xl overflow-hidden border-2 transition-all ${
+            className={`shrink-0 h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 rounded-xl overflow-hidden border-2 transition-all ${
               i === active ? 'border-saffron-400 shadow-[0_0_0_2px_rgba(255,122,0,0.18)]' : 'border-transparent opacity-55 hover:opacity-80'
             }`}>
             <img src={img} alt="" className="h-full w-full object-cover" />
@@ -230,7 +230,7 @@ export default function SamagriDetailPage() {
       </div>
 
       <div className="container-base">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.15fr] xl:gap-16">
+        <div className="grid gap-6 md:gap-10 lg:grid-cols-[1fr_1.15fr] xl:gap-16">
 
           {/* ── LEFT: Gallery ── */}
           <ImageGallery images={images} name={product.name} />
@@ -269,14 +269,14 @@ export default function SamagriDetailPage() {
               <div className="mt-4 rounded-xl overflow-hidden border border-dark-50">
                 <div className="grid grid-cols-3 text-center">
                   {[
-                    { label: 'Retail Price', price: retailPrice, mode: 'standalone', color: 'text-dark-800' },
-                    { label: 'With Pandit', price: Math.round(retailPrice * (1 - DISCOUNT.with_pandit)), mode: 'with_pandit', color: 'text-saffron-700' },
-                    { label: 'With Puja', price: Math.round(retailPrice * (1 - DISCOUNT.with_puja)), mode: 'with_puja', color: 'text-green-700' },
+                    { label: 'Retail', price: retailPrice, mode: 'standalone', color: 'text-dark-800' },
+                    { label: 'w/ Pandit', price: Math.round(retailPrice * (1 - DISCOUNT.with_pandit)), mode: 'with_pandit', color: 'text-saffron-700' },
+                    { label: 'w/ Puja', price: Math.round(retailPrice * (1 - DISCOUNT.with_puja)), mode: 'with_puja', color: 'text-green-700' },
                   ].map((t, i) => (
-                    <div key={t.mode} className={`p-3 ${i < 2 ? 'border-r border-dark-50' : ''} ${priceMode === t.mode ? 'bg-saffron-50/50' : ''}`}>
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-dark-400 mb-1">{t.label}</div>
-                      <div className={`font-bold text-base ${t.color}`}>₹{t.price.toLocaleString('en-IN')}</div>
-                      {priceMode === t.mode && <div className="text-[10px] text-saffron-600 mt-0.5 font-medium">▲ Your price</div>}
+                    <div key={t.mode} className={`p-2 sm:p-3 ${i < 2 ? 'border-r border-dark-50' : ''} ${priceMode === t.mode ? 'bg-saffron-50/50' : ''}`}>
+                      <div className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-dark-400 mb-1">{t.label}</div>
+                      <div className={`font-bold text-sm sm:text-base ${t.color}`}>₹{t.price.toLocaleString('en-IN')}</div>
+                      {priceMode === t.mode && <div className="text-[9px] sm:text-[10px] text-saffron-600 mt-0.5 font-medium">▲ Active</div>}
                     </div>
                   ))}
                 </div>

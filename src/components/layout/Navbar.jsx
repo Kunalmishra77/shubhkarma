@@ -245,7 +245,7 @@ export default function Navbar() {
                         onMouseEnter={() => handleMouseEnter(item.id)}
                         onMouseLeave={handleMouseLeave}
                         className={`absolute top-full mt-2 bg-white rounded-2xl border border-dark-50 shadow-lg overflow-hidden ${
-                          item.mega ? 'left-1/2 -translate-x-1/2 w-[780px]' : 'left-0 min-w-[200px]'
+                          item.mega ? 'left-1/2 -translate-x-1/2 w-[min(780px,95vw)]' : 'left-0 min-w-[200px]'
                         }`}
                       >
                         {item.mega ? (

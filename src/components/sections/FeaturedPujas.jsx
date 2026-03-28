@@ -7,7 +7,7 @@ export default function FeaturedPujas() {
   const featured = fallbackPujas.filter(p => p.is_featured).slice(0, 4);
 
   return (
-    <section className="py-24 px-6 bg-gradient-to-b from-cream to-white relative overflow-hidden">
+    <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-b from-cream to-white relative overflow-hidden">
       {/* Subtle decorative glow */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-saffron/4 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-72 h-72 bg-gold/4 rounded-full blur-[120px] pointer-events-none" />
@@ -19,7 +19,7 @@ export default function FeaturedPujas() {
           subtitle="These are the pujas most loved by our devotees. Each one is performed with authentic Vedic traditions by experienced pandits."
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-7">
           {featured.map((puja, i) => (
             <GlowCard key={puja.id} puja={puja} index={i} />
           ))}

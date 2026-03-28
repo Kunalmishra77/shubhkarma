@@ -772,7 +772,7 @@ export function DifferenceOrbitSection({ items = [] }) {
 
           {/* ── RIGHT: Orbit ── */}
           <div className="flex items-center justify-center">
-            <div className="relative h-[420px] w-[420px] md:h-[480px] md:w-[480px]">
+            <div className="relative h-[280px] w-[280px] sm:h-[360px] sm:w-[360px] md:h-[420px] md:w-[420px] lg:h-[480px] lg:w-[480px]">
 
               {/* Glow core */}
               <div className="absolute inset-[30%] rounded-full bg-saffron-500/[0.08] blur-[60px]" />

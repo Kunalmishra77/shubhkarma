@@ -96,7 +96,7 @@ export default function PanditProfilePage() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-44 h-44 md:w-56 md:h-56 rounded-3xl overflow-hidden shrink-0 bg-[#1a0e00] shadow-2xl border border-saffron-500/15"
+              className="relative w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-3xl overflow-hidden shrink-0 bg-[#1a0e00] shadow-2xl border border-saffron-500/15"
             >
               <img
                 src={getPanditImage(pandit.id)}
@@ -131,7 +131,7 @@ export default function PanditProfilePage() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="flex-grow"
             >
-              <h1 className="font-heading text-3xl md:text-4xl font-bold text-white mb-1.5">
+              <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1.5">
                 {pandit.name}
               </h1>
               <p className="text-saffron-400 font-medium text-base mb-5">{pandit.title}</p>
@@ -269,7 +269,7 @@ export default function PanditProfilePage() {
                 Pujas Performed by {lastName}
               </h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto">
               {panditPujas.map((puja, i) => (
                 <PujaCard key={puja.id} puja={puja} index={i} />
               ))}

@@ -195,7 +195,7 @@ export default function PujaDetailPage() {
       <section className="bg-[#0A0704] pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Main large image */}
-          <div className="relative mb-3 overflow-hidden rounded-3xl aspect-[16/7]">
+          <div className="relative mb-3 overflow-hidden rounded-3xl aspect-[4/3] sm:aspect-[16/9] md:aspect-[16/7]">
             <AnimatePresence mode="wait">
               <motion.img key={galleryIndex} src={galleryImages[galleryIndex]} alt={`${puja.title} ceremony — photo ${galleryIndex + 1}`}
                 className="h-full w-full object-cover"
@@ -211,7 +211,7 @@ export default function PujaDetailPage() {
           <div className="flex gap-2 overflow-x-auto pb-1">
             {galleryImages.map((img, i) => (
               <button key={i} type="button" onClick={() => setGalleryIndex(i)}
-                className={`shrink-0 h-16 w-24 rounded-xl overflow-hidden border-2 transition-all ${
+                className={`shrink-0 h-12 w-20 sm:h-16 sm:w-24 rounded-xl overflow-hidden border-2 transition-all ${
                   i === galleryIndex ? 'border-saffron-400 opacity-100' : 'border-transparent opacity-40 hover:opacity-70'
                 }`}>
                 <img src={img} alt="" className="h-full w-full object-cover" />

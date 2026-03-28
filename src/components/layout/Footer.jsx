@@ -72,7 +72,7 @@ export default function Footer() {
     <footer className="bg-dark-800 text-dark-200">
       {/* ── Main Grid ────────────────────────── */}
       <div className="container-base pt-16 pb-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-8">
           {/* Brand */}
           <div className="lg:col-span-4">
             <Link to="/" className="inline-block no-underline mb-5">
