@@ -6,6 +6,9 @@ import { getSamagriProducts, getSamagriCategories } from '../services/api';
 import { useApi } from '../hooks/useApi';
 import { getSamagriImage, handleImageError } from '../utils/images';
 import SEOHead from '../components/seo/SEOHead';
+import { LeafIcon, LabIcon, BlessingIcon, PackageIcon } from '../components/ui/AnimatedIcons';
+
+const LOAD_STEP = 8;
 
 const sortOptions = [
   { value: 'popular',    label: 'Most Popular' },
@@ -19,6 +22,37 @@ const cardVariant = {
   visible: { opacity: 1, y: 0 },
   exit:    { opacity: 0, scale: 0.95 },
 };
+
+const purityPromises = [
+  {
+    Icon: LeafIcon,
+    title: 'Hand-Sourced',
+    desc: 'Every item procured directly from trusted suppliers in Varanasi, Haridwar & Vrindavan.',
+    color: 'from-emerald-500/15 to-green-400/8',
+    border: 'border-emerald-500/20',
+  },
+  {
+    Icon: LabIcon,
+    title: 'Lab-Tested Purity',
+    desc: 'Ghee, camphor, and haldi go through purity checks. No adulterants, ever.',
+    color: 'from-cyan-500/15 to-blue-400/8',
+    border: 'border-cyan-500/20',
+  },
+  {
+    Icon: BlessingIcon,
+    title: 'Puja-Ready Kits',
+    desc: 'Complete kits with everything needed for a proper ritual — no last-minute shopping.',
+    color: 'from-amber-500/20 to-yellow-400/10',
+    border: 'border-amber-500/20',
+  },
+  {
+    Icon: PackageIcon,
+    title: 'Pan-India Delivery',
+    desc: 'Delivered in secure, airtight packaging within 48 hours across India.',
+    color: 'from-orange-500/15 to-saffron-400/8',
+    border: 'border-saffron-500/20',
+  },
+];
 
 /* ── Product Card ───────────────────────────────────── */
 function ProductCard({ product, categories, index }) {
@@ -35,11 +69,10 @@ function ProductCard({ product, categories, index }) {
       initial="hidden"
       animate="visible"
       exit="exit"
-      transition={{ delay: Math.min(index * 0.05, 0.4), duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay: Math.min(index * 0.04, 0.3), duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="group"
     >
       <div className="bg-white/[0.04] border border-white/[0.07] rounded-2xl overflow-hidden hover:border-saffron-500/25 hover:bg-white/[0.06] transition-all duration-400 flex flex-col h-full">
-        {/* Image */}
         <Link to={`/samagri/${product.slug}`} className="block no-underline shrink-0">
           <div className="relative h-48 overflow-hidden bg-[#1a0e00]">
             <img
@@ -50,7 +83,6 @@ function ProductCard({ product, categories, index }) {
               onError={(e) => handleImageError(e, product.name, 400)}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-
             {!product.inStock && (
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
                 <span className="px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-full text-xs font-bold text-red-400">Out of Stock</span>
@@ -68,8 +100,6 @@ function ProductCard({ product, categories, index }) {
             )}
           </div>
         </Link>
-
-        {/* Content */}
         <div className="p-5 flex flex-col flex-grow">
           <p className="text-[10px] font-bold text-saffron-400/70 uppercase tracking-widest mb-1.5">{catName}</p>
           <Link to={`/samagri/${product.slug}`} className="no-underline">
@@ -78,8 +108,6 @@ function ProductCard({ product, categories, index }) {
             </h3>
           </Link>
           <p className="text-xs text-white/40 line-clamp-2 mb-3 leading-relaxed flex-grow">{product.description}</p>
-
-          {/* Rating */}
           <div className="flex items-center gap-1.5 mb-3">
             <svg className="w-3.5 h-3.5 fill-gold-400" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
@@ -88,8 +116,6 @@ function ProductCard({ product, categories, index }) {
             <span className="text-[10px] text-white/25">({product.reviews})</span>
             {product.weight && <span className="text-[10px] text-white/25 ml-auto">{product.weight}</span>}
           </div>
-
-          {/* Price + CTA */}
           <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
             <div className="flex items-baseline gap-1.5">
               <span className="text-lg font-heading font-bold text-white">₹{product.price.toLocaleString('en-IN')}</span>
@@ -105,8 +131,6 @@ function ProductCard({ product, categories, index }) {
             </button>
           </div>
         </div>
-
-        {/* Bottom glow line */}
         <div className="h-0.5 bg-gradient-to-r from-saffron-500 via-gold-400 to-saffron-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
       </div>
     </motion.div>
@@ -132,49 +156,25 @@ function ProductSkeleton() {
   );
 }
 
-/* ── Purity Promise items ───────────────────────────── */
-const purityPromises = [
-  {
-    icon: '🌿',
-    title: 'Hand-Sourced',
-    desc: 'Every item procured directly from trusted suppliers in Varanasi, Haridwar & Vrindavan.',
-  },
-  {
-    icon: '🔬',
-    title: 'Lab-Tested Purity',
-    desc: 'Ghee, camphor, and haldi go through purity checks. No adulterants, ever.',
-  },
-  {
-    icon: '📦',
-    title: 'Puja-Ready Kits',
-    desc: 'Complete kits with everything needed for a proper ritual — no last-minute shopping.',
-  },
-  {
-    icon: '🚚',
-    title: 'Pan-India Delivery',
-    desc: 'Delivered in secure, airtight packaging within 48 hours across India.',
-  },
-];
-
 /* ════════════════════════════════════════════════════
    SAMAGRI STORE PAGE
    ════════════════════════════════════════════════════ */
 export default function SamagriStorePage() {
   const [activeCategory, setActiveCategory] = useState('all');
-  const [sort, setSort] = useState('popular');
-  const allProductsRef = useRef(null);
+  const [sort, setSort]                     = useState('popular');
+  const [visibleCount, setVisibleCount]     = useState(LOAD_STEP);
+  const allProductsRef                      = useRef(null);
 
   const { data: productsRes, loading: productsLoading } = useApi(() => getSamagriProducts(), []);
   const { data: catsRes }                               = useApi(() => getSamagriCategories(), []);
 
-  const samagriProducts    = productsRes?.data || [];
-  const samagriCategories  = catsRes?.data || [];
+  const samagriProducts   = productsRes?.data || [];
+  const samagriCategories = catsRes?.data     || [];
 
   const filtered = useMemo(() => {
     let result = activeCategory === 'all'
       ? [...samagriProducts]
       : samagriProducts.filter((p) => p.categoryId === activeCategory);
-
     if (sort === 'price-low')  result.sort((a, b) => a.price - b.price);
     if (sort === 'price-high') result.sort((a, b) => b.price - a.price);
     if (sort === 'rating')     result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -182,7 +182,16 @@ export default function SamagriStorePage() {
     return result;
   }, [activeCategory, sort, samagriProducts]);
 
+  const visibleProducts = filtered.slice(0, visibleCount);
+  const hasMore         = visibleCount < filtered.length;
+
   const featuredProducts = useMemo(() => samagriProducts.filter((p) => p.featured).slice(0, 4), [samagriProducts]);
+
+  // When category/sort changes, reset visible count
+  const handleCategoryChange = (id) => {
+    setActiveCategory(id);
+    setVisibleCount(LOAD_STEP);
+  };
 
   return (
     <div className="min-h-screen bg-[#090603]">
@@ -241,18 +250,25 @@ export default function SamagriStorePage() {
         </div>
       </section>
 
-      {/* ══ §2 Purity Promises (light) ══════════════════════ */}
+      {/* ══ §2 Purity Promises ══════════════════════════════ */}
       <section className="py-12 sm:py-16 bg-[#FFF8F0]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
-            {purityPromises.map(({ icon, title, desc }, i) => (
+          <div className="text-center mb-8">
+            <p className="text-[11px] font-bold text-saffron-600/70 tracking-[0.15em] uppercase mb-2">Our Promise</p>
+            <h2 className="font-heading text-xl sm:text-2xl font-bold text-[#1a0e00]">Why Our Samagri is Different</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {purityPromises.map(({ Icon, title, desc, color, border }, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                transition={{ delay: i * 0.08, duration: 0.4 }}
-                className="flex flex-col items-center sm:items-start gap-3 p-4 sm:p-5 bg-white rounded-2xl border border-saffron-100 text-center sm:text-left">
-                <span className="text-2xl sm:text-3xl">{icon}</span>
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                whileHover={{ y: -4, scale: 1.02 }}
+                className={`flex flex-col gap-4 p-5 sm:p-6 bg-gradient-to-br ${color} border ${border} rounded-2xl bg-white`}>
+                <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center">
+                  <Icon className="w-9 h-9" />
+                </div>
                 <div>
-                  <p className="font-heading text-sm font-bold text-[#1a0e00] mb-1">{title}</p>
-                  <p className="text-xs text-[#6a5040] leading-relaxed hidden sm:block">{desc}</p>
+                  <p className="font-heading text-sm font-bold text-[#1a0e00] mb-1.5">{title}</p>
+                  <p className="text-xs text-[#6a5040] leading-relaxed">{desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -277,9 +293,9 @@ export default function SamagriStorePage() {
                 </svg>
               </button>
             </div>
-
-            {/* Horizontal scroll mobile, grid on sm+ */}
-            <div className="flex gap-4 overflow-x-auto pb-3 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-5 sm:overflow-visible sm:pb-0">
+            {/* Horizontal scroll mobile → 4-col grid sm+ */}
+            <div className="flex gap-4 overflow-x-auto pb-3 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-5 sm:overflow-visible sm:pb-0"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {featuredProducts.map((product, i) => {
                 const catName = samagriCategories.find((c) => c.id === product.categoryId)?.name || 'Samagri';
                 return (
@@ -318,16 +334,18 @@ export default function SamagriStorePage() {
         </section>
       )}
 
-      {/* ══ §4 Discount Banner (dark) ════════════════════════ */}
+      {/* ══ §4 Discount Banner ══════════════════════════════ */}
       <section className="py-10 sm:py-14 bg-[#0D0905]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="flex flex-col sm:flex-row items-center gap-5 sm:gap-8 p-6 sm:p-8 bg-gradient-to-r from-saffron-500/10 via-gold-400/8 to-saffron-500/10 border border-saffron-500/20 rounded-3xl text-center sm:text-left">
-            <div className="text-4xl sm:text-5xl shrink-0">🙏</div>
+            <div className="w-16 h-16 rounded-2xl bg-saffron-500/10 border border-saffron-500/20 flex items-center justify-center shrink-0">
+              <BlessingIcon className="w-10 h-10" />
+            </div>
             <div className="flex-grow">
               <p className="text-[11px] font-bold text-saffron-400/70 tracking-[0.15em] uppercase mb-1.5">Smart Devotee Offer</p>
               <h3 className="font-heading text-lg sm:text-xl font-bold text-white mb-1.5">Book a Puja & Save up to 25% on Samagri</h3>
-              <p className="text-white/40 text-sm">Select any puja for 25% off all samagri. Book a pandit for 15% off. Retail price otherwise.</p>
+              <p className="text-white/40 text-sm">Select any puja for 25% off all samagri. Book a pandit for 15% off.</p>
             </div>
             <Link to="/pujas" className="shrink-0 inline-flex items-center gap-2 px-5 py-3 bg-saffron-500 hover:bg-saffron-400 text-white font-heading font-semibold text-sm rounded-2xl transition-colors no-underline">
               Browse Pujas
@@ -341,23 +359,27 @@ export default function SamagriStorePage() {
       <div ref={allProductsRef} className="sticky top-[72px] z-30 bg-[#090603]/95 backdrop-blur-xl border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-3 py-3">
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1">
-              <button onClick={() => setActiveCategory('all')}
-                className={`px-3 sm:px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 ${activeCategory === 'all' ? 'bg-saffron-500 text-white' : 'bg-white/[0.05] border border-white/[0.08] text-white/50 hover:text-white/80'}`}>
+            {/* Category tabs — hidden scrollbar */}
+            <div
+              className="flex items-center gap-2 overflow-x-auto flex-1"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              <button onClick={() => handleCategoryChange('all')}
+                className={`px-3 sm:px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 shrink-0 ${activeCategory === 'all' ? 'bg-saffron-500 text-white' : 'bg-white/[0.05] border border-white/[0.08] text-white/50 hover:text-white/80'}`}>
                 All ({samagriProducts.length})
               </button>
               {samagriCategories.map((cat) => {
                 const count = samagriProducts.filter((p) => p.categoryId === cat.id).length;
                 return (
-                  <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                    className={`px-3 sm:px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 ${activeCategory === cat.id ? 'bg-saffron-500 text-white' : 'bg-white/[0.05] border border-white/[0.08] text-white/50 hover:text-white/80'}`}>
+                  <button key={cat.id} onClick={() => handleCategoryChange(cat.id)}
+                    className={`px-3 sm:px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 shrink-0 ${activeCategory === cat.id ? 'bg-saffron-500 text-white' : 'bg-white/[0.05] border border-white/[0.08] text-white/50 hover:text-white/80'}`}>
                     {cat.name} ({count})
                   </button>
                 );
               })}
             </div>
 
-            <select value={sort} onChange={(e) => setSort(e.target.value)}
+            <select value={sort} onChange={(e) => { setSort(e.target.value); setVisibleCount(LOAD_STEP); }}
               className="hidden sm:block text-xs border border-white/[0.1] rounded-xl px-3 py-2 bg-white/[0.05] text-white/60 font-medium focus:outline-none focus:border-saffron-500/40 transition-colors cursor-pointer shrink-0">
               {sortOptions.map((opt) => (
                 <option key={opt.value} value={opt.value} className="bg-[#1a1208] text-white">{opt.label}</option>
@@ -367,15 +389,16 @@ export default function SamagriStorePage() {
         </div>
       </div>
 
-      {/* ══ §6 All Products Grid ════════════════════════════ */}
+      {/* ══ §6 Products Grid ════════════════════════════════ */}
       <section className="py-10 sm:py-12 bg-[#090603]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-5 sm:mb-6">
             <span className="text-xs sm:text-sm text-white/40">
-              <strong className="text-white/70">{filtered.length}</strong> products
-              {activeCategory !== 'all' && <span className="text-saffron-400/60"> (filtered)</span>}
+              Showing <strong className="text-white/70">{Math.min(visibleCount, filtered.length)}</strong>
+              {' '}of <strong className="text-white/70">{filtered.length}</strong> products
+              {activeCategory !== 'all' && <span className="text-saffron-400/60 ml-1">(filtered)</span>}
             </span>
-            <select value={sort} onChange={(e) => setSort(e.target.value)}
+            <select value={sort} onChange={(e) => { setSort(e.target.value); setVisibleCount(LOAD_STEP); }}
               className="sm:hidden text-xs border border-white/[0.1] rounded-xl px-3 py-2 bg-white/[0.05] text-white/60 font-medium focus:outline-none cursor-pointer">
               {sortOptions.map((opt) => (
                 <option key={opt.value} value={opt.value} className="bg-[#1a1208] text-white">{opt.label}</option>
@@ -389,40 +412,63 @@ export default function SamagriStorePage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 sm:py-20">
-              <div className="text-5xl mb-4">🌿</div>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/[0.04] flex items-center justify-center">
+                <LeafIcon className="w-10 h-10" />
+              </div>
               <p className="text-white/40 text-sm mb-5">No products in this category.</p>
-              <button onClick={() => setActiveCategory('all')}
+              <button onClick={() => handleCategoryChange('all')}
                 className="px-6 py-3 bg-saffron-500/10 border border-saffron-500/25 rounded-2xl text-sm font-semibold text-saffron-400 hover:bg-saffron-500/20 transition-colors">
                 View All Products
               </button>
             </div>
           ) : (
-            <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              <AnimatePresence mode="popLayout">
-                {filtered.map((product, i) => (
-                  <ProductCard key={product.id} product={product} categories={samagriCategories} index={i} />
-                ))}
-              </AnimatePresence>
-            </motion.div>
+            <>
+              <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                <AnimatePresence mode="popLayout">
+                  {visibleProducts.map((product, i) => (
+                    <ProductCard key={product.id} product={product} categories={samagriCategories} index={i} />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Load More */}
+              {hasMore && (
+                <div className="flex flex-col items-center gap-3 mt-10">
+                  <p className="text-xs text-white/25">
+                    Showing {visibleCount} of {filtered.length} products
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setVisibleCount((v) => v + LOAD_STEP)}
+                    className="flex items-center gap-2.5 px-8 py-3.5 bg-white/[0.06] border border-white/[0.12] hover:border-saffron-500/30 hover:bg-white/[0.1] text-white/70 hover:text-white font-heading font-semibold text-sm rounded-2xl transition-all duration-300"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Load {Math.min(LOAD_STEP, filtered.length - visibleCount)} more
+                    <span className="text-[10px] text-white/30 font-normal">{filtered.length - visibleCount} remaining</span>
+                  </motion.button>
+                </div>
+              )}
+
+              {!hasMore && filtered.length > LOAD_STEP && (
+                <p className="text-center text-xs text-white/20 mt-8">All {filtered.length} products shown</p>
+              )}
+            </>
           )}
         </div>
       </section>
 
-
-      {/* ══ §7 CTA — Dark ═══════════════════════════════════ */}
+      {/* ══ §7 CTA ══════════════════════════════════════════ */}
       <section className="py-14 sm:py-20 bg-[#0D0905] relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-saffron-500/4 via-transparent to-gold-400/4 pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 mb-10 sm:mb-12">
-            {[
-              { label: '100% Pure Guarantee' },
-              { label: 'Pan-India Delivery' },
-              { label: 'Secure Packaging' },
-              { label: 'Easy Returns' },
-            ].map(({ label }, i) => (
+            {['100% Pure Guarantee', 'Pan-India Delivery', 'Secure Packaging', 'Easy Returns'].map((label, i) => (
               <div key={i} className="flex items-center gap-2 text-xs sm:text-sm text-white/30">
-                <div className="w-4 h-4 rounded-full bg-saffron-500/15 flex items-center justify-center shrink-0">
-                  <svg className="w-2.5 h-2.5 text-saffron-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <div className="w-5 h-5 rounded-full bg-saffron-500/15 flex items-center justify-center shrink-0">
+                  <svg className="w-3 h-3 text-saffron-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>

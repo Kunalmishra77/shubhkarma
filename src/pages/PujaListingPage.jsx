@@ -6,6 +6,10 @@ import { getPujas, getCategories, getStats } from '../services/api';
 import { useApi } from '../hooks/useApi';
 import { PujaCard } from '../components/ui/PujaCard';
 import SEOHead from '../components/seo/SEOHead';
+import {
+  FireIcon, LotusIcon, PrayerIcon, StarIcon, CoinIcon,
+  ShieldIcon, WaveIcon, DiyaIcon, LeafIcon, TrishulIcon,
+} from '../components/ui/AnimatedIcons';
 
 /* ── Constants ──────────────────────────────────────── */
 const sortOptions = [
@@ -29,6 +33,8 @@ const durationOptions = [
   { label: 'Multi-Day',     value: 'multi-day' },
 ];
 
+const ITEMS_PER_PAGE = 12;
+
 const categoryGradients = [
   'from-orange-500/20 to-amber-400/10',
   'from-yellow-500/20 to-orange-300/10',
@@ -42,18 +48,21 @@ const categoryGradients = [
   'from-orange-400/20 to-red-300/10',
 ];
 
-const categoryIcons = {
-  mahayagya:    '🔥',
-  samskara:     '🌸',
-  regular:      '🙏',
-  astrological: '⭐',
-  prosperity:   '🪷',
-  health:       '🛡️',
-  shanti:       '☮️',
-  festival:     '🪔',
-  pitru:        '🌿',
-  tantra:       '🔱',
-};
+function getCategoryIcon(catId) {
+  const id = (catId || '').toLowerCase();
+  const cls = 'w-7 h-7';
+  if (id.includes('mahayagya') || id.includes('katha') || id.includes('yagya')) return <FireIcon className={cls} />;
+  if (id.includes('samskara') || id.includes('sanskar')) return <LotusIcon className={cls} />;
+  if (id.includes('regular') || id.includes('daily')) return <PrayerIcon className={cls} />;
+  if (id.includes('navagraha') || id.includes('astro') || id.includes('graha')) return <StarIcon className={cls} />;
+  if (id.includes('lakshmi') || id.includes('prosperity') || id.includes('wealth')) return <CoinIcon className={cls} />;
+  if (id.includes('health') || id.includes('protection') || id.includes('raksha')) return <ShieldIcon className={cls} />;
+  if (id.includes('shanti') || id.includes('peace')) return <WaveIcon className={cls} />;
+  if (id.includes('festival') || id.includes('utsav') || id.includes('diya')) return <DiyaIcon className={cls} />;
+  if (id.includes('pitru') || id.includes('ancestor')) return <LeafIcon className={cls} />;
+  if (id.includes('tantra') || id.includes('shakti') || id.includes('dosh')) return <TrishulIcon className={cls} />;
+  return <PrayerIcon className={cls} />;
+}
 
 const cardVariant = {
   hidden:  { opacity: 0, y: 24 },
@@ -157,7 +166,7 @@ function CardSkeleton() {
   );
 }
 
-/* ── Top Pick Card (for "Most Booked" section) ──────── */
+/* ── Top Pick Card (light bg) ───────────────────────── */
 function TopPickCard({ puja, index }) {
   const basePrice = puja.tiers?.basic?.price || puja.price || 0;
   return (
@@ -179,7 +188,7 @@ function TopPickCard({ puja, index }) {
               onError={(e) => { e.target.style.display = 'none'; }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
+            <div className="absolute top-3 left-3">
               {puja.tags?.includes('popular') && (
                 <span className="px-2.5 py-1 bg-saffron-500/90 rounded-full text-[10px] font-bold text-white">Most Booked</span>
               )}
@@ -188,7 +197,7 @@ function TopPickCard({ puja, index }) {
               <div className="flex items-center gap-1.5">
                 <span className="text-yellow-400 text-xs">★</span>
                 <span className="text-xs font-bold text-white">{puja.rating || '4.8'}</span>
-                <span className="text-[10px] text-white/50">({puja.reviews || 0} reviews)</span>
+                <span className="text-[10px] text-white/50">({puja.reviews || 0})</span>
               </div>
             </div>
           </div>
@@ -228,9 +237,11 @@ export default function PujaListingPage() {
     budget: [],
     duration: [],
   });
-  const [sort, setSort]             = useState('popular');
-  const [view, setView]             = useState('grid');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sort, setSort]                   = useState('popular');
+  const [view, setView]                   = useState('grid');
+  const [sidebarOpen, setSidebarOpen]     = useState(false);
+  const [currentPage, setCurrentPage]     = useState(0);
+  const [expandedCats, setExpandedCats]   = useState(new Set());
 
   const { data: pujasRes,  loading: pujasLoading } = useApi(() => getPujas(), []);
   const { data: catsRes }                           = useApi(() => getCategories(), []);
@@ -240,7 +251,6 @@ export default function PujaListingPage() {
   const categories = catsRes?.data       || [];
   const stats      = statsRes?.data      || {};
 
-  /* ── Filter groups ──────────────────────────────── */
   const filterGroups = useMemo(() => [
     {
       id: 'category',
@@ -255,8 +265,8 @@ export default function PujaListingPage() {
     { id: 'duration', title: 'Duration',     options: durationOptions },
   ], [categories, pujas]);
 
-  /* ── Handlers ──────────────────────────────────── */
   const handleFilterChange = useCallback((groupId, value, checked) => {
+    setCurrentPage(0);
     setActiveFilters((prev) => {
       const current = prev[groupId] || [];
       return { ...prev, [groupId]: checked ? [...current, value] : current.filter((v) => v !== value) };
@@ -264,6 +274,7 @@ export default function PujaListingPage() {
   }, []);
 
   const handleClearAll = useCallback(() => {
+    setCurrentPage(0);
     setActiveFilters({ category: [], budget: [], duration: [] });
   }, []);
 
@@ -272,13 +283,21 @@ export default function PujaListingPage() {
   }, [handleFilterChange]);
 
   const jumpToCategory = useCallback((catId) => {
+    setCurrentPage(0);
     setActiveFilters((p) => ({ ...p, category: [catId] }));
     setTimeout(() => {
       allRitualsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
   }, []);
 
-  /* ── Filter + sort logic ────────────────────────── */
+  const toggleExpandCat = useCallback((catId) => {
+    setExpandedCats((prev) => {
+      const next = new Set(prev);
+      next.has(catId) ? next.delete(catId) : next.add(catId);
+      return next;
+    });
+  }, []);
+
   const filteredPujas = useMemo(() => {
     let result = [...pujas];
     if (activeFilters.category.length > 0) result = result.filter((p) => activeFilters.category.includes(p.categoryId));
@@ -313,6 +332,9 @@ export default function PujaListingPage() {
     return result;
   }, [pujas, activeFilters, sort]);
 
+  const pageCount     = Math.ceil(filteredPujas.length / ITEMS_PER_PAGE);
+  const paginatedPujas = filteredPujas.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+
   const topPujas      = useMemo(() => [...pujas].sort((a, b) => (b.bookings || 0) - (a.bookings || 0)).slice(0, 4), [pujas]);
   const activeCategory = categorySlug ? categories.find((c) => c.id === categorySlug || c.slug === categorySlug) : null;
 
@@ -343,14 +365,10 @@ export default function PujaListingPage() {
             {[180,140,100,60].map((r) => (
               <circle key={r} cx="200" cy="200" r={r} fill="none" stroke="#F97316" strokeWidth="0.5"/>
             ))}
-            {[0,30,60,90,120,150,180,210,240,270,300,330].map((deg) => (
-              <line key={deg} x1="200" y1="20" x2="200" y2="380" transform={`rotate(${deg} 200 200)`} stroke="#F97316" strokeWidth="0.3"/>
-            ))}
           </svg>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-white/30 mb-6 sm:mb-8 font-medium tracking-wide flex-wrap">
             <Link to="/" className="hover:text-saffron-400 transition-colors">Home</Link>
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
@@ -374,7 +392,6 @@ export default function PujaListingPage() {
                 </span>
               </div>
             </motion.div>
-
             <motion.h1
               initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}
               className="font-heading font-bold text-white mb-4 leading-[1.1]"
@@ -384,14 +401,12 @@ export default function PujaListingPage() {
                 ? <>{activeCategory.title}<br /><span className="text-saffron-400">Pujas & Rituals</span></>
                 : <>Discover Every<br /><span className="text-saffron-400">Sacred Ritual</span></>}
             </motion.h1>
-
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
               className="text-white/50 text-sm sm:text-base leading-relaxed">
-              {activeCategory?.description || 'Authentic Vedic rituals performed by verified pandits across India. Filter by category, budget, and duration.'}
+              {activeCategory?.description || 'Authentic Vedic rituals performed by verified pandits across India.'}
             </motion.p>
           </div>
 
-          {/* Stats strip */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.35 }}
             className="flex flex-wrap gap-6 sm:gap-10 mt-10 pt-8 border-t border-white/[0.06]">
             {[
@@ -422,15 +437,12 @@ export default function PujaListingPage() {
                 onClick={() => allRitualsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 className="text-xs font-semibold text-saffron-600 hover:text-saffron-500 transition-colors flex items-center gap-1 group shrink-0"
               >
-                <span className="hidden sm:inline">See all rituals</span>
-                <span className="sm:hidden">All</span>
+                <span className="hidden sm:inline">Browse all</span>
                 <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </button>
             </div>
-
-            {/* Horizontal scroll on mobile, grid on sm+ */}
             <div className="flex gap-4 overflow-x-auto pb-3 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-5 sm:overflow-visible sm:pb-0">
               {topPujas.map((puja, i) => (
                 <div key={puja.id} className="min-w-[260px] sm:min-w-0">
@@ -442,7 +454,7 @@ export default function PujaListingPage() {
         </section>
       )}
 
-      {/* ══ §3 Browse by Occasion (dark) ════════════════════ */}
+      {/* ══ §3 Browse by Category (dark) ════════════════════ */}
       {!isFiltered && categories.length > 0 && (
         <section className="py-14 sm:py-20 bg-[#090603]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -451,13 +463,6 @@ export default function PujaListingPage() {
                 <p className="text-[11px] font-bold text-saffron-400/70 tracking-[0.15em] uppercase mb-2">What's Your Occasion?</p>
                 <h2 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold text-white">Browse by Category</h2>
               </div>
-              <Link to="/categories" className="text-xs font-semibold text-saffron-400 hover:text-saffron-300 transition-colors flex items-center gap-1 group shrink-0">
-                <span className="hidden sm:inline">All categories</span>
-                <span className="sm:hidden">All</span>
-                <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
@@ -470,10 +475,13 @@ export default function PujaListingPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.3) }}
+                    whileHover={{ scale: 1.03, y: -2 }}
                     onClick={() => jumpToCategory(cat.id)}
-                    className={`group relative flex flex-col items-center gap-2.5 sm:gap-3 p-4 sm:p-5 bg-gradient-to-br ${categoryGradients[i % categoryGradients.length]} border border-white/[0.07] rounded-2xl hover:border-saffron-500/30 hover:scale-[1.02] transition-all duration-300 text-center`}
+                    className={`group relative flex flex-col items-center gap-2.5 sm:gap-3 p-4 sm:p-5 bg-gradient-to-br ${categoryGradients[i % categoryGradients.length]} border border-white/[0.07] rounded-2xl hover:border-saffron-500/30 transition-all duration-300 text-center`}
                   >
-                    <span className="text-2xl sm:text-3xl leading-none">{categoryIcons[cat.id] || '🕉️'}</span>
+                    <div className="w-12 h-12 rounded-xl bg-white/[0.06] flex items-center justify-center">
+                      {getCategoryIcon(cat.id)}
+                    </div>
                     <div>
                       <p className="text-xs sm:text-[13px] font-semibold text-white/80 group-hover:text-white transition-colors leading-tight mb-1">{cat.title}</p>
                       {pujaCount > 0 && <p className="text-[10px] text-white/30">{pujaCount} ritual{pujaCount !== 1 ? 's' : ''}</p>}
@@ -491,18 +499,20 @@ export default function PujaListingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-3 sm:gap-4 py-3">
             <div className="flex items-center gap-3 sm:gap-4">
-              <button
-                onClick={() => setSidebarOpen((p) => !p)}
-                className="lg:hidden flex items-center gap-2 px-3 py-2 bg-white/[0.06] border border-white/[0.1] rounded-xl text-xs font-semibold text-white/70 hover:text-white transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M6 10h12M9 16h6" />
-                </svg>
-                <span>Filters</span>
-                {activeChips.length > 0 && (
-                  <span className="px-1.5 py-0.5 bg-saffron-500/20 border border-saffron-500/30 rounded-full text-[10px] text-saffron-400 font-bold">{activeChips.length}</span>
-                )}
-              </button>
+              {isFiltered && (
+                <button
+                  onClick={() => setSidebarOpen((p) => !p)}
+                  className="lg:hidden flex items-center gap-2 px-3 py-2 bg-white/[0.06] border border-white/[0.1] rounded-xl text-xs font-semibold text-white/70 hover:text-white transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M6 10h12M9 16h6" />
+                  </svg>
+                  <span>Filters</span>
+                  {activeChips.length > 0 && (
+                    <span className="px-1.5 py-0.5 bg-saffron-500/20 border border-saffron-500/30 rounded-full text-[10px] text-saffron-400 font-bold">{activeChips.length}</span>
+                  )}
+                </button>
+              )}
               <span className="text-xs sm:text-sm text-white/40">
                 <strong className="text-white font-semibold">{filteredPujas.length}</strong>
                 <span className="ml-1 hidden sm:inline">rituals found</span>
@@ -512,7 +522,7 @@ export default function PujaListingPage() {
             <div className="flex items-center gap-2 sm:gap-3">
               <select
                 value={sort}
-                onChange={(e) => setSort(e.target.value)}
+                onChange={(e) => { setSort(e.target.value); setCurrentPage(0); }}
                 className="text-xs border border-white/[0.1] rounded-xl px-2.5 sm:px-3 py-2 bg-white/[0.05] text-white/70 font-medium focus:outline-none focus:border-saffron-500/50 transition-colors cursor-pointer max-w-[130px] sm:max-w-none"
               >
                 {sortOptions.map((opt) => (
@@ -535,7 +545,6 @@ export default function PujaListingPage() {
             </div>
           </div>
 
-          {/* Active chips */}
           <AnimatePresence>
             {activeChips.length > 0 && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
@@ -559,89 +568,225 @@ export default function PujaListingPage() {
         </div>
       </div>
 
-      {/* ══ §5 All Rituals — Sidebar + Grid ═════════════════ */}
-      <section className="py-10 sm:py-12 bg-[#090603]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-7 lg:gap-8">
-
-            {/* Desktop Sidebar */}
-            <div className="hidden lg:block w-[260px] xl:w-[280px] shrink-0">
-              <div className="lg:sticky lg:top-[148px]">
-                <DarkFilterSidebar filters={filterGroups} activeFilters={activeFilters} onFilterChange={handleFilterChange} onClearAll={handleClearAll} />
-              </div>
+      {/* ══ §5 Content — Categorized or Filtered ════════════ */}
+      {pujasLoading ? (
+        <section className="py-10 bg-[#090603]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
             </div>
+          </div>
+        </section>
+      ) : !isFiltered ? (
+        /* ── UNFILTERED: Categorized sections ── */
+        <section className="py-12 sm:py-16 bg-[#090603]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {categories.map((cat, catIdx) => {
+              const catPujas = [...pujas]
+                .filter((p) => p.categoryId === cat.id)
+                .sort((a, b) => (b.bookings || 0) - (a.bookings || 0));
+              if (catPujas.length === 0) return null;
+              const isExpanded = expandedCats.has(cat.id);
+              const PREVIEW = 3;
+              const displayed = isExpanded ? catPujas : catPujas.slice(0, PREVIEW);
+              const hasMore = catPujas.length > PREVIEW;
 
-            {/* Mobile Filter Drawer */}
-            <AnimatePresence>
-              {sidebarOpen && (
-                <>
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSidebarOpen(false)}
-                    className="lg:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" />
-                  <motion.div
-                    initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="lg:hidden fixed inset-y-0 left-0 z-50 w-[85vw] max-w-sm bg-[#0D0905] border-r border-white/[0.07] overflow-y-auto p-5"
-                  >
-                    <div className="flex items-center justify-between mb-6">
-                      <span className="font-heading text-lg font-bold text-white">Filters</span>
-                      <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-xl bg-white/[0.05] text-white/50 hover:text-white">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              return (
+                <motion.div
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-60px' }}
+                  transition={{ duration: 0.5, delay: Math.min(catIdx * 0.04, 0.2) }}
+                  className="mb-14 sm:mb-18 last:mb-0"
+                >
+                  {/* Category header */}
+                  <div className="flex items-center justify-between mb-5 sm:mb-7">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${categoryGradients[catIdx % categoryGradients.length]} border border-white/[0.08] flex items-center justify-center shrink-0`}>
+                        {getCategoryIcon(cat.id)}
+                      </div>
+                      <div>
+                        <h2 className="font-heading text-base sm:text-lg md:text-xl font-bold text-white leading-tight">{cat.title}</h2>
+                        <p className="text-xs text-white/30 mt-0.5">{catPujas.length} ritual{catPujas.length !== 1 ? 's' : ''}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      {hasMore && (
+                        <button
+                          onClick={() => toggleExpandCat(cat.id)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-saffron-400 hover:text-saffron-300 transition-colors"
+                        >
+                          {isExpanded ? (
+                            <>
+                              Show less
+                              <svg className="w-3.5 h-3.5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </>
+                          ) : (
+                            <>
+                              <span className="hidden sm:inline">+{catPujas.length - PREVIEW} more</span>
+                              <span className="sm:hidden">More</span>
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => jumpToCategory(cat.id)}
+                        className="hidden sm:flex items-center gap-1 text-xs text-white/30 hover:text-saffron-400 transition-colors"
+                      >
+                        Filter
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
                       </button>
                     </div>
-                    <DarkFilterSidebar filters={filterGroups} activeFilters={activeFilters} onFilterChange={handleFilterChange} onClearAll={handleClearAll} />
-                    <div className="mt-6">
-                      <button onClick={() => setSidebarOpen(false)}
-                        className="w-full py-3.5 bg-saffron-500 rounded-2xl text-sm font-heading font-bold text-white">
-                        Show {filteredPujas.length} Results
-                      </button>
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
+                  </div>
 
-            {/* Puja Grid */}
-            <div className="flex-grow min-w-0">
-              {pujasLoading ? (
-                <div className={`grid gap-5 ${view === 'list' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
-                  {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+                  {/* Puja cards: horizontal scroll on mobile, 3-col grid on desktop */}
+                  <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-5 sm:overflow-visible sm:pb-0"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <AnimatePresence mode="popLayout">
+                      {displayed.map((puja, i) => (
+                        <motion.div
+                          key={puja.id}
+                          layout
+                          variants={cardVariant}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                          transition={{ delay: Math.min(i * 0.06, 0.25) }}
+                          className="min-w-[260px] sm:min-w-0"
+                        >
+                          <PujaCard puja={puja} index={i} />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="mt-12 sm:mt-14 border-t border-white/[0.04]" />
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
+      ) : (
+        /* ── FILTERED: Sidebar + Paginated Grid ── */
+        <section className="py-10 sm:py-12 bg-[#090603]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col lg:flex-row gap-7 lg:gap-8">
+
+              {/* Desktop Sidebar */}
+              <div className="hidden lg:block w-[260px] xl:w-[280px] shrink-0">
+                <div className="lg:sticky lg:top-[148px]">
+                  <DarkFilterSidebar filters={filterGroups} activeFilters={activeFilters} onFilterChange={handleFilterChange} onClearAll={handleClearAll} />
                 </div>
-              ) : filteredPujas.length === 0 ? (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                  className="bg-white/[0.03] border border-white/[0.06] rounded-3xl p-12 sm:p-20 text-center">
-                  <div className="font-heading text-6xl sm:text-7xl font-bold text-saffron-500/10 mb-6 leading-none select-none" aria-hidden>ॐ</div>
-                  <h3 className="font-heading text-xl sm:text-2xl font-bold text-white mb-3">No rituals match your filters</h3>
-                  <p className="text-white/40 text-sm mb-8 max-w-sm mx-auto">Try adjusting your filters or browse all sacred pujas.</p>
-                  <button onClick={handleClearAll}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-saffron-500/10 border border-saffron-500/30 rounded-2xl text-sm font-semibold text-saffron-400 hover:bg-saffron-500/20 transition-colors">
-                    Clear all filters
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.div layout className={`grid gap-5 sm:gap-6 ${view === 'list' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
-                  <AnimatePresence mode="popLayout">
-                    {filteredPujas.map((puja, i) => (
-                      <motion.div key={puja.id} layout variants={cardVariant} initial="hidden" animate="visible" exit="exit"
-                        transition={{ delay: Math.min(i * 0.05, 0.3) }}>
-                        <PujaCard puja={puja} index={i} />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              )}
+              </div>
 
-              {filteredPujas.length > 0 && (
-                <p className="text-center text-xs text-white/25 mt-10">
-                  Showing all <strong className="text-white/40">{filteredPujas.length}</strong> results
-                  {activeChips.length > 0 && <span> for {activeChips.length} active filter{activeChips.length > 1 ? 's' : ''}</span>}
-                </p>
-              )}
+              {/* Mobile Filter Drawer */}
+              <AnimatePresence>
+                {sidebarOpen && (
+                  <>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSidebarOpen(false)}
+                      className="lg:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" />
+                    <motion.div
+                      initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                      className="lg:hidden fixed inset-y-0 left-0 z-50 w-[85vw] max-w-sm bg-[#0D0905] border-r border-white/[0.07] overflow-y-auto p-5"
+                    >
+                      <div className="flex items-center justify-between mb-6">
+                        <span className="font-heading text-lg font-bold text-white">Filters</span>
+                        <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-xl bg-white/[0.05] text-white/50 hover:text-white">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      <DarkFilterSidebar filters={filterGroups} activeFilters={activeFilters} onFilterChange={handleFilterChange} onClearAll={handleClearAll} />
+                      <div className="mt-6">
+                        <button onClick={() => setSidebarOpen(false)}
+                          className="w-full py-3.5 bg-saffron-500 rounded-2xl text-sm font-heading font-bold text-white">
+                          Show {filteredPujas.length} Results
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+
+              {/* Puja Grid */}
+              <div className="flex-grow min-w-0">
+                {filteredPujas.length === 0 ? (
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    className="bg-white/[0.03] border border-white/[0.06] rounded-3xl p-12 sm:p-20 text-center">
+                    <div className="font-heading text-6xl sm:text-7xl font-bold text-saffron-500/10 mb-6 leading-none select-none">ॐ</div>
+                    <h3 className="font-heading text-xl sm:text-2xl font-bold text-white mb-3">No rituals match your filters</h3>
+                    <p className="text-white/40 text-sm mb-8 max-w-sm mx-auto">Try adjusting your filters or browse all sacred pujas.</p>
+                    <button onClick={handleClearAll}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-saffron-500/10 border border-saffron-500/30 rounded-2xl text-sm font-semibold text-saffron-400 hover:bg-saffron-500/20 transition-colors">
+                      Clear all filters
+                    </button>
+                  </motion.div>
+                ) : (
+                  <>
+                    <motion.div layout className={`grid gap-5 sm:gap-6 ${view === 'list' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
+                      <AnimatePresence mode="popLayout">
+                        {paginatedPujas.map((puja, i) => (
+                          <motion.div key={puja.id} layout variants={cardVariant} initial="hidden" animate="visible" exit="exit"
+                            transition={{ delay: Math.min(i * 0.04, 0.2) }}>
+                            <PujaCard puja={puja} index={i} />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </motion.div>
+
+                    {/* Pagination */}
+                    {pageCount > 1 && (
+                      <div className="flex items-center justify-center gap-2 mt-10">
+                        <button
+                          disabled={currentPage === 0}
+                          onClick={() => { setCurrentPage((p) => p - 1); allRitualsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                          className="px-4 py-2 rounded-xl border border-white/[0.08] text-xs font-semibold text-white/50 hover:text-white hover:border-saffron-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                          ← Prev
+                        </button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: pageCount }).map((_, p) => (
+                            <button
+                              key={p}
+                              onClick={() => { setCurrentPage(p); allRitualsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                              className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${p === currentPage ? 'bg-saffron-500 text-white' : 'bg-white/[0.05] text-white/40 hover:bg-white/[0.1] hover:text-white'}`}
+                            >
+                              {p + 1}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          disabled={currentPage === pageCount - 1}
+                          onClick={() => { setCurrentPage((p) => p + 1); allRitualsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                          className="px-4 py-2 rounded-xl border border-white/[0.08] text-xs font-semibold text-white/50 hover:text-white hover:border-saffron-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    )}
+
+                    <p className="text-center text-xs text-white/25 mt-6">
+                      Showing <strong className="text-white/40">{currentPage * ITEMS_PER_PAGE + 1}–{Math.min((currentPage + 1) * ITEMS_PER_PAGE, filteredPujas.length)}</strong> of <strong className="text-white/40">{filteredPujas.length}</strong> results
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ══ §6 Custom Ritual CTA ════════════════════════════ */}
       <section className="py-14 sm:py-20 bg-[#0D0905] relative overflow-hidden">
@@ -658,9 +803,6 @@ export default function PujaListingPage() {
             <div className="flex flex-col sm:flex-row gap-3 shrink-0 w-full sm:w-auto">
               <a href="https://wa.me/919999999999?text=Hi! I need a custom puja arrangement." target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-saffron-500 hover:bg-saffron-400 text-white font-heading font-semibold text-sm rounded-2xl transition-colors duration-300 no-underline">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
                 WhatsApp Us
               </a>
               <Link to="/contact"
@@ -677,14 +819,18 @@ export default function PujaListingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 md:gap-12">
             {[
-              { icon: '🛡️', label: '500+ Verified Pandits' },
-              { icon: '🌿', label: '100% Pure Samagri' },
-              { icon: '💎', label: 'Transparent Pricing' },
-              { icon: '🙏', label: 'Pay After Puja' },
-            ].map(({ icon, label }) => (
-              <div key={label} className="flex items-center gap-2 text-xs sm:text-sm text-white/30">
-                <span>{icon}</span>
-                <span>{label}</span>
+              { label: 'Verified Pandits', icon: 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z' },
+              { label: 'Authentic Rituals', icon: 'M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25' },
+              { label: 'Pan-India Pandits', icon: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z' },
+              { label: 'Pay After Puja', icon: 'M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z' },
+            ].map(({ label, icon }, i) => (
+              <div key={i} className="flex items-center gap-2.5 text-xs sm:text-sm text-white/30">
+                <div className="w-8 h-8 rounded-xl bg-saffron-500/10 border border-saffron-500/15 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-saffron-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={icon} />
+                  </svg>
+                </div>
+                {label}
               </div>
             ))}
           </div>
