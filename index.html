@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ShubhKarma — Book authentic Vedic pujas performed by experienced pandits. Sacred rituals for prosperity, peace, and divine blessings." />
+    <meta name="theme-color" content="#FF7A00" />
+
+    <!-- Open Graph defaults (react-helmet-async overrides per page) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ShubhKarma" />
+    <meta property="og:locale" content="en_IN" />
+
+    <!-- Preconnect to font origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Preload critical fonts -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;1,400&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;1,400&display=swap" />
+
+    <!-- DNS prefetch for API -->
+    <link rel="dns-prefetch" href="//api.shubhkarma.in" />
+
+    <title>ShubhKarma — Sacred Rituals, Modern Convenience</title>
+
+    <!-- Preloader Styles -->
+    <style>
+      /* ── Premium Preloader ──────────────────────── */
+      #preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(160deg, #FFF8F0 0%, #FFF0E0 40%, #FFEDD5 100%);
+        transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #preloader.hide {
+        opacity: 0;
+        transform: scale(1.03);
+        pointer-events: none;
+      }
+
+      /* Mandala SVG spinning ring */
+      .preloader-mandala {
+        width: 120px;
+        height: 120px;
+        position: relative;
+        margin-bottom: 32px;
+      }
+      .preloader-mandala .ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid transparent;
+      }
+      .preloader-mandala .ring-outer {
+        border-top-color: #FF7A00;
+        border-right-color: #D4AF37;
+        animation: preloader-spin 2s linear infinite;
+      }
+      .preloader-mandala .ring-middle {
+        inset: 12px;
+        border-bottom-color: #FF7A00;
+        border-left-color: #D4AF37;
+        animation: preloader-spin 1.5s linear infinite reverse;
+      }
+      .preloader-mandala .ring-inner {
+        inset: 24px;
+        border-top-color: #D4AF37;
+        border-right-color: #FF7A00;
+        animation: preloader-spin 1s linear infinite;
+      }
+
+      /* Om symbol in center */
+      .preloader-om {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 28px;
+        color: #FF7A00;
+        animation: preloader-pulse 1.5s ease-in-out infinite;
+        font-family: serif;
+      }
+
+      /* Brand text */
+      .preloader-brand {
+        font-family: 'Outfit', system-ui, sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #FF7A00, #D4AF37);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+        opacity: 0;
+        animation: preloader-fadeUp 0.8s 0.3s ease forwards;
+      }
+      .preloader-tagline {
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 12px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #8C7A68;
+        opacity: 0;
+        animation: preloader-fadeUp 0.8s 0.5s ease forwards;
+      }
+
+      /* Progress bar */
+      .preloader-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #FF7A00, #D4AF37, #FF7A00);
+        background-size: 200% 100%;
+        animation: preloader-progress 2s ease-in-out infinite, preloader-shimmer 1.5s ease infinite;
+        border-radius: 0 2px 2px 0;
+      }
+
+      /* Floating particles */
+      .preloader-particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #FF7A00;
+        opacity: 0;
+        animation: preloader-float 3s ease-in-out infinite;
+      }
+      .preloader-particle:nth-child(2) { left: 20%; top: 30%; animation-delay: 0.5s; background: #D4AF37; width: 3px; height: 3px; }
+      .preloader-particle:nth-child(3) { left: 70%; top: 20%; animation-delay: 1s; width: 5px; height: 5px; }
+      .preloader-particle:nth-child(4) { left: 80%; top: 60%; animation-delay: 1.5s; background: #D4AF37; width: 3px; height: 3px; }
+      .preloader-particle:nth-child(5) { left: 15%; top: 70%; animation-delay: 2s; width: 4px; height: 4px; }
+      .preloader-particle:nth-child(6) { left: 60%; top: 80%; animation-delay: 0.8s; background: #D4AF37; }
+      .preloader-particle:nth-child(7) { left: 40%; top: 15%; animation-delay: 1.3s; width: 5px; height: 5px; }
+      .preloader-particle:nth-child(8) { left: 85%; top: 35%; animation-delay: 1.8s; background: #D4AF37; width: 3px; height: 3px; }
+
+      @keyframes preloader-spin {
+        to { transform: rotate(360deg); }
+      }
+      @keyframes preloader-pulse {
+        0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+        50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+      }
+      @keyframes preloader-fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes preloader-progress {
+        0% { width: 0%; }
+        50% { width: 70%; }
+        100% { width: 100%; }
+      }
+      @keyframes preloader-shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+      @keyframes preloader-float {
+        0%, 100% { opacity: 0; transform: translateY(0) scale(0); }
+        20% { opacity: 0.6; transform: translateY(-20px) scale(1); }
+        80% { opacity: 0.3; transform: translateY(-60px) scale(0.5); }
+        100% { opacity: 0; transform: translateY(-80px) scale(0); }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Premium Preloader -->
+    <div id="preloader">
+      <!-- Floating particles -->
+      <div class="preloader-particle" style="left:30%;top:45%"></div>
+      <div class="preloader-particle"></div>
+      <div class="preloader-particle"></div>
+      <div class="preloader-particle"></div>
+      <div class="preloader-particle"></div>
+      <div class="preloader-particle"></div>
+      <div class="preloader-particle"></div>
+      <div class="preloader-particle"></div>
+
+      <!-- Spinning mandala rings -->
+      <div class="preloader-mandala">
+        <div class="ring ring-outer"></div>
+        <div class="ring ring-middle"></div>
+        <div class="ring ring-inner"></div>
+        <div class="preloader-om">ॐ</div>
+      </div>
+
+      <!-- Brand -->
+      <div class="preloader-brand">ShubhKarma</div>
+      <div class="preloader-tagline">Sacred Rituals, Modern Convenience</div>
+
+      <!-- Progress bar -->
+      <div class="preloader-progress"></div>
+    </div>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Dismiss preloader when app mounts -->
+    <script>
+      window.addEventListener('load', function () {
+        // Give React a moment to hydrate, then fade out
+        setTimeout(function () {
+          var el = document.getElementById('preloader');
+          if (el) {
+            el.classList.add('hide');
+            setTimeout(function () { el.remove(); }, 700);
+          }
+        }, 800);
+      });
+    </script>
+  </body>
+</html>
