@@ -1,7 +1,40 @@
-// Animated SVG Icons — looping CSS animations, no static icons
+// Animated SVG Icons — looping CSS animations + interactive hover/tap
 import { motion } from 'framer-motion';
 
 const glow = (color = '#FF7A00') => `drop-shadow(0 0 8px ${color}40) drop-shadow(0 0 20px ${color}20)`;
+
+/**
+ * IconOrb — wraps any icon in an interactive floating orb.
+ * Provides: hover scale+rotate, tap bounce, glow ring pulse, float animation.
+ *
+ * Usage: <IconOrb color="#FF7A00"><FireIcon className="w-8 h-8" /></IconOrb>
+ */
+export function IconOrb({ children, color = '#FF7A00', size = 'md', className = '' }) {
+  const sizes = { sm: 'w-10 h-10 rounded-xl', md: 'w-14 h-14 rounded-2xl', lg: 'w-18 h-18 rounded-3xl' };
+  return (
+    <motion.div
+      className={`relative flex items-center justify-center ${sizes[size] || sizes.md} ${className}`}
+      animate={{ y: [0, -4, 0] }}
+      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+      whileHover={{ scale: 1.15, rotate: 6 }}
+      whileTap={{ scale: 0.88, rotate: -4 }}
+      style={{
+        background: `radial-gradient(circle at 35% 35%, ${color}28, ${color}08)`,
+        border: `1px solid ${color}30`,
+        boxShadow: `0 4px 24px ${color}18, inset 0 1px 0 ${color}18`,
+      }}
+    >
+      {/* Pulse ring */}
+      <motion.div
+        className="absolute inset-0 rounded-[inherit] pointer-events-none"
+        animate={{ scale: [1, 1.35, 1], opacity: [0.35, 0, 0.35] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeOut' }}
+        style={{ border: `1px solid ${color}50` }}
+      />
+      {children}
+    </motion.div>
+  );
+}
 
 // ── Search Icon (pulsing magnifier) ──
 export function SearchIcon({ className = 'w-10 h-10' }) {
