@@ -11,11 +11,27 @@ const heroWords = ['Prosperity', 'Peace', 'Blessings', 'Abundance'];
 
 const trustItems = [
   { num: '1,200+', label: 'Pujas Performed' },
-  { num: '98%', label: 'Satisfaction Rate' },
-  { num: '400+', label: 'Verified Pandits' },
-  { num: '30+', label: 'Cities Served' },
+  { num: '98%',    label: 'Satisfaction Rate' },
+  { num: '400+',   label: 'Verified Pandits' },
+  { num: '30+',    label: 'Cities Served' },
 ];
 
+const pujaOptions = [
+  'Satyanarayan Katha',
+  'Griha Pravesh Puja',
+  'Rudrabhishek',
+  'Ganesh Puja',
+  'Navgraha Shanti',
+  'Bhagwat Katha (7 Days)',
+  'Mundan Sanskar',
+  'Vivah (Wedding Puja)',
+  'Lakshmi Puja',
+  'Maha Mrityunjaya Jaap',
+  'Kaal Sarp Dosh Nivaran',
+  'Other (Custom Puja)',
+];
+
+/* ── Mandala Ring ─────────────────────────────────── */
 function MandalaRing({ size, duration, delay = 0, opacity = 0.06 }) {
   return (
     <motion.div
@@ -28,15 +44,15 @@ function MandalaRing({ size, duration, delay = 0, opacity = 0.06 }) {
       }}
       className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
       style={{
-        width: size,
-        height: size,
-        border: '1px dashed rgba(255, 170, 89, 0.14)',
-        boxShadow: '0 0 80px rgba(255, 122, 0, 0.03)',
+        width: size, height: size,
+        border: '1px dashed rgba(255,170,89,0.14)',
+        boxShadow: '0 0 80px rgba(255,122,0,0.03)',
       }}
     />
   );
 }
 
+/* ── Floating Diya ────────────────────────────────── */
 function FloatingDiya({ x, y, delay, scale = 1, rotate = 0 }) {
   const flameId = useRef(`hf-${x}-${y}-${delay}`.replace(/[^a-z0-9-]/gi, '-'));
   const bowlId  = useRef(`hb-${x}-${y}-${delay}`.replace(/[^a-z0-9-]/gi, '-'));
@@ -50,10 +66,8 @@ function FloatingDiya({ x, y, delay, scale = 1, rotate = 0 }) {
       animate={{ opacity: [0, 0.9, 0.85, 0], y: [18, 0, -12, -26], rotate: [rotate - 2, rotate + 2, rotate - 1] }}
       transition={{ duration: 7.5, delay, repeat: Infinity, ease: 'easeInOut' }}
     >
-      <svg
-        width={44 * scale} height={52 * scale} viewBox="0 0 44 52" fill="none"
-        style={{ filter: 'drop-shadow(0 10px 24px rgba(255,122,0,0.14))' }}
-      >
+      <svg width={44 * scale} height={52 * scale} viewBox="0 0 44 52" fill="none"
+        style={{ filter: 'drop-shadow(0 10px 24px rgba(255,122,0,0.14))' }}>
         <defs>
           <linearGradient id={bowlId.current} x1="7" y1="22" x2="36" y2="43" gradientUnits="userSpaceOnUse">
             <stop stopColor="#FFD083" /><stop offset="0.38" stopColor="#F39A2A" />
@@ -92,19 +106,163 @@ function FloatingDiya({ x, y, delay, scale = 1, rotate = 0 }) {
   );
 }
 
+/* ── Enquiry Form ─────────────────────────────────── */
+function EnquiryForm() {
+  const [form, setForm] = useState({ name: '', phone: '', puja: '', date: '', message: '' });
+  const [status, setStatus] = useState('idle'); // idle | submitting | success
+
+  const handleChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setStatus('submitting');
+    // Simulate submission — in production connect to Supabase/API
+    setTimeout(() => setStatus('success'), 1400);
+  };
+
+  const inputClass =
+    'w-full rounded-xl bg-white/[0.06] border border-white/[0.10] px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-saffron-500/60 focus:bg-white/[0.09] focus:ring-1 focus:ring-saffron-500/25 transition-all duration-200 backdrop-blur-sm';
+
+  if (status === 'success') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex flex-col items-center justify-center gap-5 py-10 text-center"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 14, delay: 0.1 }}
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-saffron-500/30 to-gold-400/20 border border-saffron-500/40"
+        >
+          <span className="text-3xl">🙏</span>
+        </motion.div>
+        <div>
+          <h4 className="font-heading text-lg font-bold text-white mb-1">Namaste, {form.name || 'Devotee'}!</h4>
+          <p className="text-sm text-white/50 leading-relaxed">
+            Your enquiry has been received.<br />
+            Our team will call you within <span className="text-saffron-400 font-semibold">2 hours</span>.
+          </p>
+        </div>
+        <Link to="/pujas"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-saffron-500/15 border border-saffron-500/30 rounded-full text-xs font-semibold text-saffron-300 hover:bg-saffron-500/25 transition-colors no-underline">
+          Browse All Pujas →
+        </Link>
+      </motion.div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+      {/* Name + Phone row */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="relative">
+          <input
+            type="text" name="name" value={form.name} onChange={handleChange}
+            placeholder="Your Name" required
+            className={inputClass}
+          />
+        </div>
+        <div className="relative">
+          <input
+            type="tel" name="phone" value={form.phone} onChange={handleChange}
+            placeholder="+91 Phone" required pattern="[0-9+\s\-]{7,15}"
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      {/* Puja type */}
+      <div className="relative">
+        <select name="puja" value={form.puja} onChange={handleChange} required
+          className={`${inputClass} cursor-pointer appearance-none`}
+          style={{ color: form.puja ? 'white' : 'rgba(255,255,255,0.3)' }}>
+          <option value="" disabled className="bg-[#1a0e00] text-white/40">Select Puja / Ceremony</option>
+          {pujaOptions.map((p) => (
+            <option key={p} value={p} className="bg-[#1a0e00] text-white">{p}</option>
+          ))}
+        </select>
+        <svg className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
+      {/* Preferred date */}
+      <div className="relative">
+        <input
+          type="date" name="date" value={form.date} onChange={handleChange}
+          min={new Date().toISOString().split('T')[0]}
+          className={`${inputClass} [color-scheme:dark]`}
+        />
+        {!form.date && (
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-white/30 select-none">
+            Preferred Date (optional)
+          </span>
+        )}
+      </div>
+
+      {/* Message */}
+      <textarea
+        name="message" value={form.message} onChange={handleChange}
+        placeholder="Any specific requirements or questions..."
+        rows={2}
+        className={`${inputClass} resize-none`}
+      />
+
+      {/* Submit */}
+      <motion.button
+        type="submit"
+        disabled={status === 'submitting'}
+        whileHover={{ scale: 1.015 }}
+        whileTap={{ scale: 0.985 }}
+        className="w-full rounded-xl bg-gradient-to-r from-saffron-500 via-[#F28A18] to-gold-500 py-3.5 text-sm font-heading font-bold text-white shadow-[0_4px_20px_rgba(255,122,0,0.30)] hover:shadow-[0_4px_28px_rgba(255,122,0,0.44)] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
+      >
+        {status === 'submitting' ? (
+          <>
+            <motion.span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white inline-block"
+              animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} />
+            Sending Enquiry...
+          </>
+        ) : (
+          <>
+            <span>🙏</span>
+            Book Free Consultation
+          </>
+        )}
+      </motion.button>
+
+      {/* Trust row */}
+      <div className="flex items-center justify-center gap-4 pt-0.5">
+        {['Free call-back', 'No advance', 'Verified pandits'].map((t) => (
+          <span key={t} className="flex items-center gap-1 text-[10px] text-white/30 font-medium">
+            <svg className="w-2.5 h-2.5 text-saffron-500/60" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l2.5 2.5L10 3.5" />
+            </svg>
+            {t}
+          </span>
+        ))}
+      </div>
+    </form>
+  );
+}
+
+/* ════════════════════════════════════════════════════
+   HERO SECTION
+   ════════════════════════════════════════════════════ */
 export default function HeroSection() {
-  const parallax        = useMouseParallax(0.010);
-  const headingRef      = useRef(null);
-  const subtitleRef     = useRef(null);
-  const containerRef    = useRef(null);
+  const parallax           = useMouseParallax(0.010);
+  const headingRef         = useRef(null);
+  const subtitleRef        = useRef(null);
+  const containerRef       = useRef(null);
   const shouldReduceMotion = useReducedMotion();
-  const [showParticles, setShowParticles]     = useState(false);
-  const [activeWordIdx, setActiveWordIdx]     = useState(0);
+  const [showParticles, setShowParticles] = useState(false);
+  const [activeWordIdx, setActiveWordIdx] = useState(0);
 
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end start'] });
-  const bgY          = useTransform(scrollYProgress, [0, 1], ['0%', '22%']);
+  const bgY            = useTransform(scrollYProgress, [0, 1], ['0%', '22%']);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
-  const contentY     = useTransform(scrollYProgress, [0, 0.55], [0, -60]);
+  const contentY       = useTransform(scrollYProgress, [0, 0.55], [0, -60]);
 
   /* ── entrance animations ── */
   useEffect(() => {
@@ -123,7 +281,7 @@ export default function HeroSection() {
   /* ── word cycling ── */
   useEffect(() => {
     if (shouldReduceMotion) return;
-    const id = window.setInterval(() => setActiveWordIdx(i => (i + 1) % heroWords.length), 2600);
+    const id = window.setInterval(() => setActiveWordIdx((i) => (i + 1) % heroWords.length), 2600);
     return () => window.clearInterval(id);
   }, [shouldReduceMotion]);
 
@@ -151,21 +309,14 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_72%_55%_at_50%_38%,rgba(255,148,40,0.15)_0%,transparent_68%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_76%,rgba(212,175,55,0.10)_0%,transparent_38%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_26%,rgba(255,187,103,0.07)_0%,transparent_32%)]" />
-        {/* horizon glow */}
         <div className="absolute bottom-[12%] left-1/2 h-40 w-[26rem] -translate-x-1/2 rounded-[999px] bg-[radial-gradient(circle,rgba(255,160,64,0.22),rgba(255,160,64,0.02)_68%,transparent_72%)] blur-3xl" />
-        {/* perspective ellipses */}
         <div className="absolute inset-x-[14%] top-[20%] h-[26rem] rounded-full border border-saffron-500/[0.09] opacity-50 [transform:rotateX(72deg)]" />
         <div className="absolute inset-x-[22%] bottom-[8%] h-[18rem] rounded-full border border-gold-400/[0.07] opacity-40 [transform:rotateX(76deg)]" />
       </motion.div>
 
       {/* ── subtle grid ── */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.015]"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(255,122,0,0.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,122,0,0.4) 1px,transparent 1px)',
-          backgroundSize: '96px 96px',
-        }}
-      />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.015]"
+        style={{ backgroundImage: 'linear-gradient(rgba(255,122,0,0.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,122,0,0.4) 1px,transparent 1px)', backgroundSize: '96px 96px' }} />
 
       {/* ── particles ── */}
       {showParticles && (
@@ -175,16 +326,16 @@ export default function HeroSection() {
       )}
 
       {/* ── mandala rings ── */}
-      <MandalaRing size="500px"  duration={68}  delay={0}    opacity={0.055} />
-      <MandalaRing size="720px"  duration={100} delay={0.4}  opacity={0.032} />
-      <MandalaRing size="940px"  duration={138} delay={0.9}  opacity={0.018} />
+      <MandalaRing size="500px"  duration={68}  delay={0}   opacity={0.055} />
+      <MandalaRing size="720px"  duration={100} delay={0.4} opacity={0.032} />
+      <MandalaRing size="940px"  duration={138} delay={0.9} opacity={0.018} />
 
       {/* ── floating diyas ── */}
-      <FloatingDiya x={7}  y={30} delay={0}   scale={1.18} rotate={-8} />
-      <FloatingDiya x={87} y={38} delay={1.9} scale={1.0}  rotate={7}  />
-      <FloatingDiya x={16} y={70} delay={3.6} scale={0.9}  rotate={-6} />
-      <FloatingDiya x={78} y={20} delay={1.1} scale={1.0}  rotate={5}  />
-      <FloatingDiya x={52} y={80} delay={2.8} scale={1.1}  rotate={-3} />
+      <FloatingDiya x={5}  y={28} delay={0}   scale={1.0}  rotate={-8} />
+      <FloatingDiya x={92} y={36} delay={1.9} scale={0.85} rotate={7}  />
+      <FloatingDiya x={12} y={68} delay={3.6} scale={0.8}  rotate={-6} />
+      <FloatingDiya x={88} y={18} delay={1.1} scale={0.9}  rotate={5}  />
+      <FloatingDiya x={50} y={82} delay={2.8} scale={0.9}  rotate={-3} />
 
       {/* ── divider lines ── */}
       <div className="pointer-events-none absolute top-[22%] left-0 h-px w-full bg-gradient-to-r from-transparent via-saffron-500/10 to-transparent" />
@@ -193,149 +344,195 @@ export default function HeroSection() {
       {/* ══════════════════ MAIN CONTENT ══════════════════ */}
       <motion.div
         style={{ x: parallax.x, y: contentY, opacity: contentOpacity }}
-        className="relative z-10 mx-auto w-full max-w-5xl px-6 pb-20 pt-28 text-center"
+        className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pb-16 pt-28 lg:pt-32"
       >
-        {/* eyebrow */}
-        <motion.div
-          initial={{ opacity: 0, y: 16, scale: 0.93 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.15 }}
-          className="mb-9"
-        >
-          <span className="inline-flex items-center gap-3 rounded-full border border-white/[0.09] bg-white/[0.05] px-6 py-2.5 text-[13px] font-medium tracking-wide text-white/55 backdrop-blur-xl">
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-saffron-400 opacity-65" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-saffron-500" />
-            </span>
-            Verified Pandits · Complete Samagri · Guided Booking
-          </span>
-        </motion.div>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_460px] gap-10 xl:gap-16 items-center">
 
-        {/* ── headline ── */}
-        <div
-          ref={headingRef}
-          className="mb-7 font-heading font-extrabold leading-[1.02] tracking-tight"
-          style={{ perspective: '900px' }}
-        >
-          {/* line 1 */}
-          <span className="block text-[clamp(3rem,7vw,5.6rem)] text-white/92 drop-shadow-[0_6px_32px_rgba(255,255,255,0.06)]">
-            Bring Home
-          </span>
-
-          {/* line 2 — gradient + glow */}
-          <span className="relative mt-1 block text-[clamp(3rem,7vw,5.6rem)]">
-            <span className="absolute left-1/2 top-1/2 -z-10 h-32 w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-saffron-500/10 blur-3xl" />
-            <span className="bg-gradient-to-r from-saffron-300 via-[#FFCB6B] to-saffron-400 bg-clip-text text-transparent">
-              Sacred Energy
-            </span>
-          </span>
-
-          {/* line 3 — animated word */}
-          <span className="mt-4 flex items-center justify-center gap-3 text-[clamp(1.5rem,3.4vw,2.5rem)] font-semibold text-white/60">
-            for&nbsp;
-            <span className="relative inline-flex min-w-[9ch] items-center justify-center overflow-hidden rounded-full border border-saffron-400/22 bg-saffron-500/10 px-6 py-1.5 text-saffron-200 shadow-[0_0_36px_rgba(255,122,0,0.12)]">
-              <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,190,95,0.2),transparent_70%)]" />
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={heroWords[activeWordIdx]}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: shouldReduceMotion ? 0.01 : 0.32, ease: [0.16, 1, 0.3, 1] }}
-                  className="relative font-semibold"
-                >
-                  {heroWords[activeWordIdx]}
-                </motion.span>
-              </AnimatePresence>
-            </span>
-          </span>
-        </div>
-
-        {/* ── subtitle ── */}
-        <p
-          ref={subtitleRef}
-          className="mx-auto mb-11 max-w-xl text-base leading-relaxed text-white/42 md:text-[1.05rem]"
-          style={{ opacity: 0 }}
-        >
-          Book authentic Vedic pujas with experienced pandits, complete samagri, and a calm guided experience — from muhurat to blessings.
-        </p>
-
-        {/* ── CTAs ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.78, delay: 1.2 }}
-          className="mb-14 flex flex-col items-center justify-center gap-4 sm:flex-row"
-        >
-          <MagneticButton strength={0.2}>
-            <Link
-              to="/pujas"
-              className="group inline-flex items-center gap-2.5 rounded-full bg-gradient-to-r from-saffron-500 via-[#F28A18] to-gold-500 px-9 py-4 text-[15px] font-semibold text-white shadow-[0_4px_24px_rgba(255,122,0,0.32),0_0_60px_rgba(255,122,0,0.10)] transition-all duration-500 hover:scale-[1.035] hover:shadow-[0_4px_34px_rgba(255,122,0,0.46),0_0_80px_rgba(255,122,0,0.16)] no-underline"
+          {/* ══ LEFT: Hero text ═══════════════════════════ */}
+          <div className="text-center lg:text-left">
+            {/* eyebrow */}
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.93 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.15 }}
+              className="mb-8 sm:mb-9"
             >
-              Explore Pujas
-              <motion.span
-                className="inline-block text-sm"
-                animate={{ x: [0, 4, 0] }}
-                transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
-              >
-                →
-              </motion.span>
-            </Link>
-          </MagneticButton>
+              <span className="inline-flex items-center gap-3 rounded-full border border-white/[0.09] bg-white/[0.05] px-5 sm:px-6 py-2.5 text-[12px] sm:text-[13px] font-medium tracking-wide text-white/55 backdrop-blur-xl">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-saffron-400 opacity-65" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-saffron-500" />
+                </span>
+                Verified Pandits · Complete Samagri · Guided Booking
+              </span>
+            </motion.div>
 
-          <MagneticButton strength={0.14}>
-            <Link
-              to="/about"
-              className="group inline-flex items-center gap-2 rounded-full border border-white/[0.11] bg-white/[0.055] px-9 py-4 text-[15px] font-semibold text-white/78 backdrop-blur-xl transition-all duration-400 no-underline hover:border-saffron-400/28 hover:bg-white/[0.09]"
+            {/* headline */}
+            <div
+              ref={headingRef}
+              className="mb-6 sm:mb-7 font-heading font-extrabold leading-[1.02] tracking-tight"
+              style={{ perspective: '900px' }}
             >
-              Meet Our Pandits
-              <svg className="h-4 w-4 opacity-45 transition-all group-hover:translate-x-1 group-hover:opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </MagneticButton>
-        </motion.div>
+              <span className="block text-[clamp(2.6rem,6vw,5.2rem)] text-white/92 drop-shadow-[0_6px_32px_rgba(255,255,255,0.06)]">
+                Bring Home
+              </span>
+              <span className="relative mt-1 block text-[clamp(2.6rem,6vw,5.2rem)]">
+                <span className="absolute left-1/2 lg:left-[35%] top-1/2 -z-10 h-32 w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-saffron-500/10 blur-3xl" />
+                <span className="bg-gradient-to-r from-saffron-300 via-[#FFCB6B] to-saffron-400 bg-clip-text text-transparent">
+                  Sacred Energy
+                </span>
+              </span>
+              <span className="mt-3 sm:mt-4 flex items-center justify-center lg:justify-start gap-3 text-[clamp(1.3rem,3vw,2.2rem)] font-semibold text-white/60">
+                for&nbsp;
+                <span className="relative inline-flex min-w-[9ch] items-center justify-center overflow-hidden rounded-full border border-saffron-400/22 bg-saffron-500/10 px-5 sm:px-6 py-1.5 text-saffron-200 shadow-[0_0_36px_rgba(255,122,0,0.12)]">
+                  <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,190,95,0.2),transparent_70%)]" />
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={heroWords[activeWordIdx]}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: shouldReduceMotion ? 0.01 : 0.32, ease: [0.16, 1, 0.3, 1] }}
+                      className="relative font-semibold"
+                    >
+                      {heroWords[activeWordIdx]}
+                    </motion.span>
+                  </AnimatePresence>
+                </span>
+              </span>
+            </div>
 
-        {/* ── stats bar ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 1.5 }}
-          className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-x-8 gap-y-4"
-        >
-          {trustItems.map((item, i) => (
-            <div key={item.label} className="flex items-center gap-2.5">
-              {i > 0 && (
-                <span className="hidden h-4 w-px bg-white/10 sm:block" />
-              )}
-              <div className="text-center">
-                <div className="font-heading text-xl font-bold text-saffron-300">{item.num}</div>
-                <div className="text-[11px] font-medium uppercase tracking-widest text-white/32">{item.label}</div>
+            {/* subtitle */}
+            <p
+              ref={subtitleRef}
+              className="mx-auto lg:mx-0 mb-9 sm:mb-11 max-w-lg text-sm sm:text-base leading-relaxed text-white/42"
+              style={{ opacity: 0 }}
+            >
+              Book authentic Vedic pujas with experienced pandits, complete samagri, and a calm guided experience — from muhurat to blessings.
+            </p>
+
+            {/* CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.78, delay: 1.2 }}
+              className="mb-10 sm:mb-14 flex flex-col items-center lg:items-start justify-center lg:justify-start gap-4 sm:flex-row"
+            >
+              <MagneticButton strength={0.2}>
+                <Link to="/pujas"
+                  className="group inline-flex items-center gap-2.5 rounded-full bg-gradient-to-r from-saffron-500 via-[#F28A18] to-gold-500 px-7 sm:px-9 py-3.5 sm:py-4 text-[14px] sm:text-[15px] font-semibold text-white shadow-[0_4px_24px_rgba(255,122,0,0.32),0_0_60px_rgba(255,122,0,0.10)] transition-all duration-500 hover:scale-[1.035] hover:shadow-[0_4px_34px_rgba(255,122,0,0.46)] no-underline">
+                  Explore Pujas
+                  <motion.span className="inline-block text-sm" animate={{ x: [0, 4, 0] }} transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}>
+                    →
+                  </motion.span>
+                </Link>
+              </MagneticButton>
+              <MagneticButton strength={0.14}>
+                <Link to="/about"
+                  className="group inline-flex items-center gap-2 rounded-full border border-white/[0.11] bg-white/[0.055] px-7 sm:px-9 py-3.5 sm:py-4 text-[14px] sm:text-[15px] font-semibold text-white/78 backdrop-blur-xl transition-all duration-400 no-underline hover:border-saffron-400/28 hover:bg-white/[0.09]">
+                  Meet Our Pandits
+                  <svg className="h-4 w-4 opacity-45 transition-all group-hover:translate-x-1 group-hover:opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </MagneticButton>
+            </motion.div>
+
+            {/* stats bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, delay: 1.5 }}
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 sm:gap-x-8 gap-y-4"
+            >
+              {trustItems.map((item, i) => (
+                <div key={item.label} className="flex items-center gap-2.5">
+                  {i > 0 && <span className="hidden h-4 w-px bg-white/10 sm:block" />}
+                  <div className="text-center lg:text-left">
+                    <div className="font-heading text-lg sm:text-xl font-bold text-saffron-300">{item.num}</div>
+                    <div className="text-[10px] sm:text-[11px] font-medium uppercase tracking-widest text-white/32">{item.label}</div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* ══ RIGHT: Enquiry Form ════════════════════════ */}
+          <motion.div
+            initial={{ opacity: 0, x: 40, y: 10 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full lg:w-auto"
+          >
+            {/* Outer glow */}
+            <div className="absolute -inset-4 rounded-3xl bg-saffron-500/[0.04] blur-2xl pointer-events-none" />
+
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden"
+              style={{ boxShadow: '0 0 0 1px rgba(255,170,80,0.13), 0 24px 60px rgba(0,0,0,0.55), 0 4px 20px rgba(255,122,0,0.08)' }}>
+
+              {/* Glass backdrop */}
+              <div className="absolute inset-0 bg-white/[0.04] backdrop-blur-2xl" />
+
+              {/* Top golden shimmer line */}
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-saffron-400/50 to-transparent" />
+              {/* Left shimmer line */}
+              <div className="absolute top-0 left-0 bottom-0 w-px bg-gradient-to-b from-saffron-400/40 via-saffron-500/10 to-transparent" />
+
+              <div className="relative p-5 sm:p-7">
+                {/* Form header */}
+                <div className="mb-5 sm:mb-6">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-saffron-500/30 to-gold-400/20 border border-saffron-500/30">
+                      <span className="text-base">🕉️</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-saffron-400/80 tracking-[0.15em] uppercase block">Free Consultation</span>
+                      <h3 className="font-heading text-base sm:text-lg font-bold text-white leading-tight">Book Your Sacred Ritual</h3>
+                    </div>
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-white/35 leading-relaxed">
+                    Share your details and we'll match you with the perfect pandit for your ceremony. No advance payment required.
+                  </p>
+                </div>
+
+                {/* Divider */}
+                <div className="mb-5 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+
+                {/* The form */}
+                <EnquiryForm />
+
+                {/* Bottom pandit preview */}
+                <div className="mt-5 pt-4 border-t border-white/[0.06] flex items-center gap-3">
+                  <div className="flex -space-x-2 shrink-0">
+                    {['👳', '👳🏽', '👳🏾'].map((emoji, i) => (
+                      <div key={i} className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-saffron-500/20 to-amber-700/20 border border-white/10 text-xs">
+                        {emoji}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-white/35 leading-tight">
+                    <span className="text-white/60 font-semibold">500+ pandits</span> ready to serve you across India
+                  </p>
+                </div>
               </div>
             </div>
-          ))}
-        </motion.div>
+          </motion.div>
+          {/* ── end right col ── */}
+        </div>
       </motion.div>
 
       {/* ── scroll indicator ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2.2, duration: 1 }}
+        transition={{ delay: 2.4, duration: 1 }}
         className="absolute bottom-9 left-1/2 z-10 -translate-x-1/2"
       >
-        <motion.div
-          animate={{ y: [0, 7, 0] }}
-          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-          className="flex flex-col items-center gap-2"
-        >
+        <motion.div animate={{ y: [0, 7, 0] }} transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+          className="flex flex-col items-center gap-2">
           <span className="text-[9px] font-semibold uppercase tracking-[0.22em] text-white/16">Scroll</span>
-          <div className="flex h-7 w-4.5 items-start justify-center rounded-full border border-white/[0.09] p-1.5">
-            <motion.div
-              animate={{ y: [0, 8, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-              className="h-1 w-1 rounded-full bg-saffron-500/80"
-            />
+          <div className="flex h-7 w-4 items-start justify-center rounded-full border border-white/[0.09] p-1.5">
+            <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+              className="h-1 w-1 rounded-full bg-saffron-500/80" />
           </div>
         </motion.div>
       </motion.div>
